@@ -1,0 +1,31 @@
+# Ejemplo de configuración de trompo. Copiarlo como trompo.yml en la raíz
+# del repositorio con los modelos. Las rutas son relativas a esa raíz.
+
+# Dónde quedan los videos y trompo.json (las huellas de cada video).
+carpeta-videos: docs/videos
+
+# Opciones para todos los modelos; cada modelo puede cambiarlas.
+giros: [z]                  # "z", "x", o con sentido: "z-horario", "x-arriba"
+medidas:
+  cuadrado: 1080x1080
+  vertical: 1080x1920
+fondos:
+  blanco: "#ffffff"
+  rosado: "#ff9ecf"
+formatos: [mp4]             # mp4, gif; con fondo "ninguno", mp4 sale como .mov
+segundos: 6
+
+modelos:
+  # Una pieza para imprimir: z hacia arriba, color gris por defecto.
+  - nombre: carcasa
+    archivo: impresion/carcasa.stl
+    color: "#7fd1b9"
+
+  # Un escaneo 3D: además un gif chico y transparente para el README.
+  - nombre: retrato
+    archivo: escaneos/retrato.glb
+    elevacion: 5
+    fondos:
+      rosado: "#ff9ecf"
+      transparente: ninguno
+    formatos: [mp4, gif]

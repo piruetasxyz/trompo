@@ -1,0 +1,35 @@
+# Ejemplo de workflow que usa trompo. Copiarlo a .github/workflows/girar.yml
+# del repositorio con los modelos, junto con un trompo.yml en la raíz (ver
+# ejemplos/trompo.yml).
+name: Girar modelos 3D
+
+on:
+  push:
+    branches:
+      - main
+    # GitHub no puede leer las rutas desde trompo.yml, así que se escucha
+    # cualquier cambio de modelos 3D; si no cambia ninguno de los que están
+    # en trompo.yml, trompo no hace commit.
+    paths:
+      - "**/*.stl"
+      - "**/*.glb"
+      - "**/*.gltf"
+      - "**/*.obj"
+      - "**/*.mtl"
+      - "**/*.ply"
+      - "trompo.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  girar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: piruetasxyz/trompo@v0

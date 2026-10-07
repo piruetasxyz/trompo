@@ -1,0 +1,41 @@
+{
+  "name": "trompo",
+  "version": "0.0.1",
+  "description": "Videos de tornamesa en loop de modelos 3D: STL para imprimir, escaneos GLB, OBJ y PLY",
+  "type": "module",
+  "license": "MIT",
+  "author": "piruetas",
+  "homepage": "https://github.com/piruetasxyz/trompo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piruetasxyz/trompo.git"
+  },
+  "keywords": [
+    "3d",
+    "stl",
+    "glb",
+    "turntable",
+    "tornamesa",
+    "video",
+    "three"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "trompo": "bin/trompo.js"
+  },
+  "exports": "./src/index.js",
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "postinstall": "playwright install chromium-headless-shell"
+  },
+  "dependencies": {
+    "playwright": "^1.64.0",
+    "three": "^0.186.1",
+    "yaml": "^2.9.1"
+  }
+}

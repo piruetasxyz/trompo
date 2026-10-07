@@ -1,0 +1,52 @@
+name: Probar trompo
+
+# Corre la acción contra los modelos de pruebas/, sin hacer commit, y revisa
+# que salgan todos los videos; después la corre otra vez y revisa que no
+# vuelva a dibujar nada.
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar trompo
+        uses: actions/checkout@v7
+
+      - name: Correr trompo
+        id: trompo
+        uses: ./
+        with:
+          configuracion: pruebas/trompo.yml
+          forzar: "true"
+          hacer-commit: "false"
+
+      - name: Revisar resultado
+        run: |
+          set -eu
+          cd pruebas/videos
+          for video in \
+            casita-stl-z-antihorario-chico-rosado.mp4 \
+            casita-stl-z-antihorario-chico-rosado.gif \
+            casita-ply-x-arriba-chico-rosado.mp4 \
+            casita-obj-z-antihorario-chico-transparente.mov \
+            casita-obj-z-antihorario-chico-transparente.gif; do
+            test -s "$video"
+            ffprobe -v error -show_entries stream=width,height -of csv=p=0 "$video"
+          done
+          # El .mov transparente mantiene el canal alfa.
+          ffprobe -v error -show_entries stream=pix_fmt -of csv=p=0 \
+            casita-obj-z-antihorario-chico-transparente.mov | grep -q yuva
+
+      - name: Revisar que una segunda corrida no dibuje nada
+        run: |
+          set -eu
+          node bin/trompo.js --configuracion pruebas/trompo.yml | tee salida.txt
+          grep -F "0 videos dibujados, 5 al día" salida.txt

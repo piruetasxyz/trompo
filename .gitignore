@@ -1,5 +1,5 @@
 node_modules/
+pruebas/videos/
 *.mp4
 *.mov
-!media/*.mp4
 .DS_Store

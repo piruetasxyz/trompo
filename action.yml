@@ -1,0 +1,102 @@
+name: trompo
+description: Videos de tornamesa en loop de modelos 3D (STL, GLB, OBJ, PLY), en mp4, mov y gif.
+author: piruetas
+branding:
+  icon: rotate-cw
+  color: purple
+
+inputs:
+  configuracion:
+    description: Archivo de configuración, relativo a la raíz del repositorio.
+    default: trompo.yml
+  forzar:
+    description: Si es "true", dibuja todo de nuevo aunque los modelos no hayan cambiado.
+    default: "false"
+  hacer-commit:
+    description: Si es "true", hace commit y push de los videos cuando cambian.
+    default: "true"
+  mensaje-commit:
+    description: Mensaje del commit automático.
+    default: "Actualizar videos de tornamesa [skip ci]"
+
+outputs:
+  hubo-cambios:
+    description: '"true" si algún video cambió respecto del último commit.'
+    value: ${{ steps.revisar.outputs.hubo-cambios }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configurar Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: "24"
+
+    - name: Instalar trompo
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        set -eu
+        # npm ci corre el postinstall, que descarga Chromium sin ventana;
+        # install-deps instala las bibliotecas del sistema que necesita.
+        npm ci --no-audit --no-fund
+        npx playwright install-deps chromium
+
+    - name: Instalar ffmpeg
+      shell: bash
+      run: |
+        set -eu
+        if ! command -v ffmpeg > /dev/null; then
+          sudo apt-get update --quiet
+          sudo apt-get install --yes --quiet --no-install-recommends ffmpeg
+        fi
+
+    - name: Dibujar videos
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        CONFIGURACION: ${{ inputs.configuracion }}
+        FORZAR: ${{ inputs.forzar }}
+      run: |
+        set -eu
+        ARGUMENTOS=(--configuracion "$CONFIGURACION" --rutas "$RUNNER_TEMP/trompo-rutas.txt")
+        if [ "$FORZAR" = "true" ]; then
+          ARGUMENTOS+=(--forzar)
+        fi
+        node "$GITHUB_ACTION_PATH/bin/trompo.js" "${ARGUMENTOS[@]}"
+
+    - name: Revisar cambios
+      id: revisar
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        set -eu
+        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas.txt"
+        if git diff --cached --quiet; then
+          echo "Sin cambios en los videos."
+          echo "hubo-cambios=false" >> "$GITHUB_OUTPUT"
+        else
+          git diff --cached --stat
+          echo "hubo-cambios=true" >> "$GITHUB_OUTPUT"
+        fi
+        # Dejar el índice como estaba: el commit, si corresponde, lo hace el
+        # paso siguiente.
+        git reset --quiet
+
+    - name: Commit y push
+      if: inputs.hacer-commit == 'true' && steps.revisar.outputs.hubo-cambios == 'true'
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        MENSAJE: ${{ inputs.mensaje-commit }}
+      run: |
+        set -eu
+        if ! git symbolic-ref --quiet HEAD > /dev/null; then
+          echo "::warning::HEAD no está en una rama (¿pull request?), no se hace commit."
+          exit 0
+        fi
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas.txt"
+        git commit --quiet --message "$MENSAJE"
+        git push

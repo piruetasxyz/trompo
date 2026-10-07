@@ -1,0 +1,20 @@
+# Configuración de prueba de trompo, usada por .github/workflows/probar.yml.
+# Las rutas son relativas a la raíz de este repositorio.
+carpeta-videos: pruebas/videos
+segundos: 1
+medidas:
+  chico: 240x240
+fondos:
+  rosado: "#ff9ecf"
+modelos:
+  - nombre: casita-stl
+    archivo: pruebas/modelos/casita.stl
+    formatos: [mp4, gif]
+  - nombre: casita-ply
+    archivo: pruebas/modelos/casita.ply
+    giros: [x-arriba]
+  - nombre: casita-obj
+    archivo: pruebas/modelos/casita.obj
+    fondos:
+      transparente: ninguno
+    formatos: [mp4, gif]
