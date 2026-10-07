@@ -195,6 +195,7 @@ Salida: `hubo-cambios`, `"true"` si algún video cambió.
 - **Disparadores**: GitHub no puede leer las rutas desde `trompo.yml`, así que el workflow de ejemplo escucha cualquier `.stl`, `.glb`, `.gltf`, `.obj`, `.mtl` y `.ply`. Si cambia un modelo que no está en `trompo.yml`, la acción corre igual pero no hace commit.
 - **Peso del repositorio**: cada video que cambia queda para siempre en la historia de git. Conviene pocas combinaciones de medidas y fondos, y videos cortos. Para muchos videos, usa `hacer-commit: "false"` y publícalos de otra forma (por ejemplo, subiéndolos como artefacto o a GitHub Pages en el mismo workflow).
 - **GitHub Pages**: los commits que hace la acción con el `GITHUB_TOKEN` no disparan el evento `push` de otros workflows. Si el sitio se despliega con un workflow propio, hay que dispararlo también con `workflow_run` al terminar este, o desplegar en el mismo workflow después de la acción.
+- **.gitignore**: los videos que el repositorio ignora (por ejemplo, con `*.mov` en su `.gitignore`) se dibujan igual pero no se suben; la acción deja un aviso por cada uno.
 - **Pull requests**: en un pull request no se hace commit (HEAD no está en una rama). Se puede usar `hacer-commit: "false"` y revisar la salida `hubo-cambios`.
 
 ## Detalles

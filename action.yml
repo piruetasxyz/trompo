@@ -71,7 +71,20 @@ runs:
       working-directory: ${{ github.workspace }}
       run: |
         set -eu
-        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas.txt"
+        RUTAS="$RUNNER_TEMP/trompo-rutas.txt"
+        # Los videos que el repositorio ignora en su .gitignore no se suben:
+        # se avisa y se dejan fuera, en vez de que git add falle.
+        git check-ignore --stdin < "$RUTAS" > "$RUNNER_TEMP/trompo-ignoradas.txt" || true
+        while IFS= read -r IGNORADA; do
+          echo "::warning::$IGNORADA está en .gitignore, no se sube."
+        done < "$RUNNER_TEMP/trompo-ignoradas.txt"
+        grep -v -x -F -f "$RUNNER_TEMP/trompo-ignoradas.txt" "$RUTAS" > "$RUNNER_TEMP/trompo-rutas-git.txt" || true
+        if [ ! -s "$RUNNER_TEMP/trompo-rutas-git.txt" ]; then
+          echo "Todos los videos están en .gitignore, no hay nada que subir."
+          echo "hubo-cambios=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas-git.txt"
         if git diff --cached --quiet; then
           echo "Sin cambios en los videos."
           echo "hubo-cambios=false" >> "$GITHUB_OUTPUT"
@@ -97,6 +110,6 @@ runs:
         fi
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas.txt"
+        git add --pathspec-from-file="$RUNNER_TEMP/trompo-rutas-git.txt"
         git commit --quiet --message "$MENSAJE"
         git push
